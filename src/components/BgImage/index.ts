@@ -1,0 +1,1 @@
+export { BgImage } from './BgImage';

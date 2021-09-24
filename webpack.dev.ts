@@ -3,8 +3,6 @@ import { Configuration, HotModuleReplacementPlugin } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import ESLintPlugin from 'eslint-webpack-plugin';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import MiniSVGDataURI from 'mini-svg-data-uri';
 
 const config: Configuration = {
   // Which bundled mode
@@ -28,11 +26,7 @@ const config: Configuration = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [
-              '@babel/preset-env',
-              '@babel/preset-react',
-              '@babel/preset-typescript',
-            ],
+            envName: 'development',
           },
         },
       },
@@ -65,20 +59,6 @@ const config: Configuration = {
         exclude: /\.module\.(s(a|c)ss)$/i,
       },
 
-      // =========================== SVG ===========================
-      {
-        test: /\.svg$/i,
-        type: 'asset/inline',
-        exclude: path.resolve(__dirname, 'src/assets/fonts'),
-        generator: {
-          dataUrl(content: string | Buffer): string {
-            const newContent = content.toString();
-            return MiniSVGDataURI(newContent);
-          },
-        },
-        use: 'svgo-loader',
-      },
-
       // ========================== Images =========================
       {
         test: /\.(png|jpg|jpeg|gif|ico|webp)$/i,
@@ -88,21 +68,32 @@ const config: Configuration = {
         },
       },
 
+      // =========================== SVG ===========================
+      {
+        test: /\.svg$/i,
+        use: ['@svgr/webpack'],
+        exclude: path.resolve(__dirname, 'src/assets/fonts'),
+      },
+
       // ========================== Fonts ==========================
       {
+        // test: /fonts.*\.(ttf|otf|eot|woff|woff2|svg)$/i,
         test: /\.(ttf|otf|eot|woff|woff2|svg)$/i,
         type: 'asset/resource',
-        include: path.resolve(__dirname, 'src/assets/fonts'),
         generator: {
           filename: 'assets/fonts/[name][ext]',
         },
+        include: path.resolve(__dirname, 'src/assets/fonts'),
       },
     ],
   },
 
   // What file types to look for in which order during module resolution
   resolve: {
-    extensions: ['.tsx', '.ts', '.jsx', '.js'],
+    extensions: ['.tsx', '.ts', '.js'],
+    alias: {
+      '@': path.resolve(__dirname, 'src/'),
+    },
   },
 
   // Customize the webpack build process
@@ -126,14 +117,15 @@ const config: Configuration = {
     }),
 
     // Copies files from target to destination folder
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: path.resolve(__dirname, 'public'),
-          to: 'assets',
-        },
-      ],
-    }),
+    // new CopyWebpackPlugin({
+    //   patterns: [
+    //     {
+    //       from: '**/*',
+    //       context: path.resolve(__dirname, 'src', 'assets'),
+    //       to: 'assets',
+    //     },
+    //   ],
+    // }),
   ],
 
   // Control how source maps are generated
