@@ -12,6 +12,8 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import CompressionPlugin from 'compression-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 
+// import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+
 const config: Configuration = {
   // Which bundled mode
   mode: 'production',
@@ -134,15 +136,20 @@ const config: Configuration = {
       },
     }),
 
+    // Split bundles into smaller chunks
     new webpack.optimize.AggressiveMergingPlugin(),
 
+    // Compressing versions of assets to serve (gzip)
     new CompressionPlugin({
       filename: 'gzip/[path][base].gz',
       algorithm: 'gzip',
-      test: /\.js$|\.css$|\.html$/,
+      test: /\.js(\?.*)?$|\.css$|\.html$/,
       threshold: 10240,
       minRatio: 0.8,
     }),
+
+    // Visualize size of webpack output files
+    // new BundleAnalyzerPlugin(),
 
     // Copies files from target to destination folder
     // new CopyWebpackPlugin({
@@ -159,7 +166,7 @@ const config: Configuration = {
   optimization: {
     minimize: true,
     minimizer: [
-      //! дополнительная настройка
+      // Minify / minimize JavaScript
       new TerserPlugin({
         test: /\.js(\?.*)?$/i,
         terserOptions: {
@@ -170,18 +177,24 @@ const config: Configuration = {
         extractComments: false,
         parallel: true,
       }),
-      new CssMinimizerPlugin(),
+
+      // Minify / minimize CSS
+      new CssMinimizerPlugin({
+        test: /.css$/i,
+      }),
     ],
     runtimeChunk: {
       name: 'runtime',
     },
-    //! дополнительная настройка
     splitChunks: {
       cacheGroups: {
         vendor: {
           name: 'node_vendors',
           test: / [\\ /] node_modules [\\ /] /,
+          // include all types of chunks
+          // https://medium.com/dailyjs/webpack-4-splitchunks-plugin-d9fbbe091fd0
           chunks: 'all',
+          priority: 1,
         },
       },
     },
